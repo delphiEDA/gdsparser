@@ -1,4 +1,4 @@
-object frm_simple_gds_parser1: Tfrm_simple_gds_parser1
+object frm_simple_gdsparser: Tfrm_simple_gdsparser
   Left = 0
   Top = 0
   Caption = 'simple gds parser'
@@ -11,20 +11,20 @@ object frm_simple_gds_parser1: Tfrm_simple_gds_parser1
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object mmo_debug: TMemo
     Left = 0
     Top = 97
     Width = 887
-    Height = 465
+    Height = 446
     Align = alClient
     Lines.Strings = (
-      'mmo_debug')
+      '****  GDS PARSER ****')
     TabOrder = 0
-    ExplicitTop = 272
-    ExplicitWidth = 889
-    ExplicitHeight = 273
+    ExplicitLeft = -8
+    ExplicitTop = 103
   end
   object pnl1: TPanel
     Left = 0
@@ -40,10 +40,18 @@ object frm_simple_gds_parser1: Tfrm_simple_gds_parser1
       Top = 20
       Width = 169
       Height = 60
-      Caption = 'LoadGDS_FILE'
+      Caption = 'Load GDS_FILE'
       TabOrder = 0
       OnClick = btn_LoadGDS_FILEClick
     end
+  end
+  object statGDSBrowser: TStatusBar
+    Left = 0
+    Top = 543
+    Width = 887
+    Height = 19
+    Panels = <>
+    SimplePanel = True
   end
   object dlgOpenGDS: TOpenDialog
     Left = 512

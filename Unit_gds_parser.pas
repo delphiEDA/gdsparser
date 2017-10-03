@@ -4,38 +4,38 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Unit_ParseGDSII,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls;
+  System.Classes, Vcl.Graphics, Unit_GDSClasses,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls,
+  Vcl.ComCtrls;
 
 type
-  Tfrm_simple_gds_parser1 = class(TForm)
+  Tfrm_simple_gdsparser = class(TForm)
     mmo_debug: TMemo;
     pnl1: TPanel;
     btn_LoadGDS_FILE: TBitBtn;
     dlgOpenGDS: TOpenDialog;
+    statGDSBrowser: TStatusBar;
     procedure btn_LoadGDS_FILEClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
     { Public declarations }
+    FTokenList: TTokenList;
   end;
 
 var
-  frm_simple_gds_parser1: Tfrm_simple_gds_parser1;
+  frm_simple_gdsparser: Tfrm_simple_gdsparser;
 
 implementation
 
 {$R *.dfm}
 
-procedure Tfrm_simple_gds_parser1.btn_LoadGDS_FILEClick(Sender: TObject);
+procedure Tfrm_simple_gdsparser.btn_LoadGDS_FILEClick(Sender: TObject);
 var
   FILENAME: String;
-  fs: TFileStream;
-  ReadBuffer: TReadBuffer;
-  RecordType, RecordLength: word;
-  mystreamposition: integer;
-  i: integer;
-  LINESTR: sTRING;
+  i, j: integer;
+  LINESTR: String;
   GDSToken: TGDSToken;
 
 begin
@@ -43,61 +43,56 @@ begin
   if dlgOpenGDS.execute then
   begin
 
-    mystreamposition := 1;
-
     FILENAME := dlgOpenGDS.FILENAME;
 
-    fs := TFileStream.Create(FILENAME, fmOpenRead);
+    statGDSBrowser.SimpleText := ' start browsing ' + FILENAME;
 
-    while mystreamposition < fs.size do
+    FTokenList.parseGDSfile(FILENAME);
+
+    statGDSBrowser.SimpleText := ' start show data ' + FILENAME;
+
+    for j := 0 to FTokenList.count - 1 do
     begin
 
-      RecordLength := GetRecordlength(fs, mystreamposition);
-      if RecordLength = 0 then
+      GDSToken := FTokenList.Items[j];
+
+      LINESTR := ' ';
+      for i := 0 to high(GDSToken.Data.BufferBytes) do
       begin
-
-        Break;
-      end
-      else
-      begin
-
-        GDSToken := TGDSToken.Create;
-        try
-
-          GetTokenInfo(fs, mystreamposition, GDSToken.FID, GDSToken.FDataType);
-
-          RecordLength := RecordLength - 2;
-
-          ReadDataBytes(fs, GDSToken.FData, RecordLength, mystreamposition);
-
-          LINESTR := ' ';
-
-          for i := 0 to high(GDSToken.Data.BufferBytes) do
-          begin
-            LINESTR := LINESTR + ByteToHex(GDSToken.Data.BufferBytes[i]) + ' ';
-          end;
-
-          mmo_debug.Lines.Add('');
-
-          mmo_debug.Lines.Add('type ' + ByteToHex(GDSToken.ID));
-
-          mmo_debug.Lines.Add('name ' + GDSToken.Name);
-
-          mmo_debug.Lines.Add('len  ' + ByteToHex(RecordLength));
-
-          mmo_debug.Lines.Add('data type  ' + GDSToken.GDSDataType);
-
-          mmo_debug.Lines.Add('data ' + LINESTR);
-
-          ReadBuffer.clear;
-
-        finally
-          GDSToken.Free;
-        end;
-
+        LINESTR := LINESTR + ByteToHex(GDSToken.Data.BufferBytes[i]) + ' ';
       end;
+
+      mmo_debug.Lines.Add('');
+
+      mmo_debug.Lines.Add('type ' + ByteToHex(GDSToken.ID));
+
+      mmo_debug.Lines.Add('name ' + GDSToken.Name);
+
+      mmo_debug.Lines.Add
+        ('len  ' + ByteToHex(Length(GDSToken.Data.BufferBytes)));
+
+      mmo_debug.Lines.Add('data type  ' + GDSToken.GDSDataType);
+
+      mmo_debug.Lines.Add('data#row ' + LINESTR);
+
+      mmo_debug.Lines.Add('data#str ' + GDSToken.DataString);
+
+
+
+
+      statGDSBrowser.SimpleText := ' writing TokenCount ' + InTToStr(j) +
+        ' out of ' + InTToStr(FTokenList.count);
+
     end;
+
+    statGDSBrowser.SimpleText := ' end show ' + FILENAME + ' TokenCount ' +
+      InTToStr(FTokenList.count);
   end;
+end;
+
+procedure Tfrm_simple_gdsparser.FormCreate(Sender: TObject);
+begin
+  FTokenList := TTokenList.Create;
 end;
 
 end.
